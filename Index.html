@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="أدعية العمرة">
+<title>أدعية العمرة</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; background: #f2f2f7; color: #1c1c1e; direction: rtl; overscroll-behavior: none; }
+.app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.screen { display: none; flex: 1; flex-direction: column; overflow: hidden; height: 100%; }
+.screen.active { display: flex; }
+.safe-top { height: env(safe-area-inset-top, 44px); background: #2d6a2d; flex-shrink: 0; }
+.safe-bottom { height: env(safe-area-inset-bottom, 20px); flex-shrink: 0; }
+
+#homeScreen { background: #f2f2f7; }
+.home-header { background: #2d6a2d; padding: 14px 16px 22px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+.home-header-center { flex: 1; text-align: center; }
+.home-header h1 { font-size: 20px; font-weight: 700; color: white; margin-bottom: 1px; }
+.home-header p { font-size: 12px; color: rgba(255,255,255,0.7); }
+.hdr-btn { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.18); border: none; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hdr-btn.active { background: rgba(255,220,80,0.4); }
+.home-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
+.section-label { font-size: 12px; font-weight: 600; color: #8e8e93; margin-bottom: 8px; padding-right: 4px; letter-spacing: 0.4px; }
+.manage-banner { display: none; background: #fff3cd; border-radius: 10px; padding: 9px 14px; margin-bottom: 12px; font-size: 13px; color: #856404; text-align: center; }
+.manage-banner.show { display: block; }
+.collection-card { background: white; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+.collection-card-inner { display: flex; align-items: center; padding: 13px 14px; gap: 11px; }
+.coll-icon { width: 44px; height: 44px; border-radius: 10px; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.coll-info { flex: 1; min-width: 0; }
+.coll-name { font-size: 16px; font-weight: 600; color: #1c1c1e; margin-bottom: 1px; }
+.coll-count { font-size: 13px; color: #8e8e93; }
+.btn-start { background: #2d6a2d; color: white; border: none; padding: 9px 18px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; -webkit-appearance: none; }
+.manage-actions { display: flex; gap: 7px; }
+.icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #e5e5ea; background: #f2f2f7; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; -webkit-appearance: none; }
+.icon-btn.red { border-color: #ffd0ce; background: #fff5f5; }
+.add-btn { width: 100%; padding: 15px 16px; border-radius: 14px; border: 1.5px dashed #c7c7cc; background: transparent; cursor: pointer; color: #2d6a2d; font-size: 15px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; -webkit-appearance: none; }
+.add-btn:active { background: #e8f5e9; }
+
+#editScreen { background: #f2f2f7; }
+.nav-bar { background: #2d6a2d; padding: 12px 14px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.nav-bar h2 { font-size: 17px; font-weight: 600; color: white; flex: 1; text-align: center; }
+.nav-btn { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-appearance: none; flex-shrink: 0; }
+.edit-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+.top-strip { background: white; border-radius: 12px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.top-strip span { font-size: 14px; color: #1c1c1e; }
+.export-btn { padding: 8px 13px; border-radius: 8px; border: 1px solid #2d6a2d; background: white; color: #2d6a2d; font-size: 13px; font-weight: 600; cursor: pointer; -webkit-appearance: none; }
+.add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.add-row button { flex: 1; padding: 11px 6px; border-radius: 10px; border: 1px solid #e5e5ea; background: white; font-size: 14px; font-weight: 500; cursor: pointer; color: #2d6a2d; -webkit-appearance: none; }
+.add-row button:active { background: #e8f5e9; }
+.dua-card { background: white; border-radius: 14px; margin-bottom: 10px; padding: 13px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.dua-row { display: flex; align-items: flex-start; gap: 10px; }
+.dua-preview { flex: 1; min-width: 0; }
+.dua-text-preview { font-size: 15px; line-height: 1.7; color: #1c1c1e; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dua-meta { font-size: 12px; color: #8e8e93; margin-top: 4px; }
+.dua-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.empty-state { text-align: center; padding: 40px 20px; color: #8e8e93; font-size: 15px; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+#readerScreen { background: white; }
+.reader-header { background: #2d6a2d; padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.reader-header h2 { font-size: 16px; font-weight: 600; color: white; flex: 1; text-align: center; }
+.progress-wrap { background: #f2f2f7; padding: 10px 16px 0; flex-shrink: 0; }
+.progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.progress-bar { flex: 1; height: 4px; background: #e5e5ea; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: #2d6a2d; border-radius: 2px; transition: width 0.35s ease; }
+.progress-nums { font-size: 13px; color: #8e8e93; white-space: nowrap; }
+.reader-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 28px 20px 16px; display: flex; flex-direction: column; align-items: center; }
+.reader-basmala { font-size: 18px; color: #2d6a2d; text-align: center; margin-bottom: 18px; line-height: 1.9; }
+.reader-arabic { font-size: clamp(19px, 5vw, 24px); line-height: 2.1; color: #1c1c1e; text-align: center; }
+.reader-source { font-size: 13px; color: #2d6a2d; text-align: center; margin-top: 16px; }
+.reader-footer { padding: 14px 20px; flex-shrink: 0; border-top: 0.5px solid #e5e5ea; background: white; }
+.footer-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.repeat-info { font-size: 14px; color: #8e8e93; }
+.circle-wrap { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+.circle-wrap svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.circle-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #1c1c1e; }
+.action-btn { width: 100%; padding: 17px; border-radius: 14px; border: none; background: #2d6a2d; color: white; font-size: 18px; font-weight: 600; cursor: pointer; -webkit-appearance: none; transition: transform 0.1s, opacity 0.1s; }
+.action-btn:active { transform: scale(0.98); opacity: 0.9; }
+.done-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 30px; text-align: center; }
+.done-emoji { font-size: 64px; margin-bottom: 20px; }
+.done-title { font-size: 24px; font-weight: 700; color: #1c1c1e; margin-bottom: 8px; }
+.done-sub { font-size: 16px; color: #8e8e93; margin-bottom: 40px; }
+.done-back { padding: 15px 40px; border-radius: 14px; border: none; background: #2d6a2d; color: white; font-size: 17px; font-weight: 600; cursor: pointer; -webkit-appearance: none; }
+
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+.modal-backdrop.open { display: flex; }
+.modal-sheet { background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 16px)); animation: slideUp 0.25s ease; max-height: 90vh; overflow-y: auto; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 36px; height: 4px; background: #c7c7cc; border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #1c1c1e; }
+.field-label { font-size: 13px; color: #8e8e93; margin-bottom: 5px; font-weight: 500; }
+.field-label.req::after { content: ' *'; color: #ff3b30; }
+textarea.fi, input.fi { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #e5e5ea; font-size: 16px; background: #f2f2f7; color: #1c1c1e; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; -webkit-appearance: none; margin-bottom: 14px; direction: rtl; text-align: right; }
+textarea.fi { resize: none; line-height: 1.6; }
+input.fi[type=number] { width: 90px; }
+.repeat-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.repeat-row .field-label { margin: 0; flex: 1; }
+.modal-btns { display: flex; gap: 10px; }
+.btn-cancel { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f2f2f7; color: #1c1c1e; font-size: 16px; font-weight: 500; cursor: pointer; -webkit-appearance: none; }
+.btn-save { flex: 2; padding: 14px; border-radius: 12px; border: none; background: #2d6a2d; color: white; font-size: 16px; font-weight: 600; cursor: pointer; -webkit-appearance: none; }
+.hint-box { background: #f0f9f0; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #3a6e3a; margin-bottom: 12px; line-height: 1.7; border: 1px solid #c8e6c9; }
+.bulk-preview { font-size: 13px; color: #2d6a2d; font-weight: 600; margin-bottom: 14px; min-height: 18px; }
+::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="homeScreen">
+    <div class="safe-top"></div>
+    <div class="home-header">
+      <div style="width:36px"></div>
+      <div class="home-header-center">
+        <h1>🕌 أدعية العمرة</h1>
+        <p>مجموعات الأدعية الخاصة بك</p>
+      </div>
+      <button class="hdr-btn" id="manageBtn" onclick="toggleManage()" title="إدارة">☰</button>
+    </div>
+    <div class="home-scroll">
+      <div class="manage-banner" id="manageBanner">وضع الإدارة — اضغط ☰ مرة أخرى للخروج</div>
+      <p class="section-label">مجموعاتي</p>
+      <div id="collectionsList"></div>
+      <button class="add-btn" onclick="showAddCollection()">＋ إضافة مجموعة جديدة</button>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+
+  <!-- EDIT -->
+  <div class="screen" id="editScreen">
+    <div class="safe-top"></div>
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="showHome()">←</button>
+      <h2 id="editTitle"></h2>
+      <div style="width:34px"></div>
+    </div>
+    <div class="edit-scroll">
+      <div class="top-strip">
+        <span id="editCountLabel"></span>
+        <button class="export-btn" onclick="exportCollection()">⬇ تصدير</button>
+      </div>
+      <div class="add-row">
+        <button onclick="openDuaModal(null)">＋ إضافة دعاء</button>
+        <button onclick="openBulkModal()">📋 لصق متعدد</button>
+      </div>
+      <div id="duasList"></div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+
+  <!-- READER -->
+  <div class="screen" id="readerScreen">
+    <div class="safe-top"></div>
+    <div class="reader-header">
+      <button class="nav-btn" onclick="showHome()">✕</button>
+      <h2 id="readerCollName"></h2>
+      <div style="width:34px"></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-row">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-nums" id="progressNums"></span>
+      </div>
+    </div>
+    <div id="readingView" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="reader-body">
+        <div class="reader-basmala" id="readerBasmala"></div>
+        <div class="reader-arabic" id="readerArabic"></div>
+        <div class="reader-source" id="readerSource"></div>
+      </div>
+      <div class="reader-footer">
+        <div class="footer-row">
+          <span class="repeat-info" id="repeatInfo"></span>
+          <div class="circle-wrap" id="circleWrap" style="display:none">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle cx="28" cy="28" r="24" fill="none" stroke="#e5e5ea" stroke-width="3.5"/>
+              <circle id="circleArc" cx="28" cy="28" r="24" fill="none" stroke="#2d6a2d" stroke-width="3.5" stroke-dasharray="150.8" stroke-dashoffset="150.8" stroke-linecap="round"/>
+            </svg>
+            <div class="circle-num" id="circleNum">1</div>
+          </div>
+        </div>
+        <button class="action-btn" id="actionBtn" onclick="handleAction()">قراءة</button>
+      </div>
+    </div>
+    <div id="doneView" style="display:none;flex:1;flex-direction:column;">
+      <div class="done-screen">
+        <div class="done-emoji">🌙</div>
+        <div class="done-title">أتممت الأدعية</div>
+        <div class="done-sub">تقبّل الله منك وبارك في رحلتك</div>
+        <button class="done-back" onclick="showHome()">العودة للرئيسية</button>
+      </div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+
+</div>
+
+<!-- DUA MODAL -->
+<div class="modal-backdrop" id="duaModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="duaModalTitle">إضافة دعاء</div>
+    <p class="field-label req">نص الدعاء</p>
+    <textarea class="fi" id="duaText" rows="4" placeholder="اكتب الدعاء هنا..."></textarea>
+    <p class="field-label">المصدر (اختياري)</p>
+    <input type="text" class="fi" id="duaSource" placeholder="مثال: سورة البقرة - آية الكرسي">
+    <div class="repeat-row">
+      <p class="field-label">عدد مرات التكرار</p>
+      <input type="number" class="fi" id="duaRepeat" min="1" max="100" value="1">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('duaModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveDua()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK MODAL -->
+<div class="modal-backdrop" id="bulkModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">لصق أدعية متعددة</div>
+    <div class="hint-box">
+      افصل كل دعاء بسطر فارغ.<br>
+      لإضافة مصدر أو تكرار، أضفه في السطر التالي مباشرةً:<br>
+      <span style="font-family:monospace;font-size:12px;direction:ltr;display:block;margin-top:4px">المصدر: سورة البقرة | تكرار: 3</span>
+    </div>
+    <p class="field-label req">الأدعية</p>
+    <textarea class="fi" id="bulkText" rows="9" placeholder="الدعاء الأول هنا...
+
+المصدر: سورة البقرة | تكرار: 3
+
+الدعاء الثاني هنا...
+
+الدعاء الثالث هنا..."></textarea>
+    <div class="bulk-preview" id="bulkPreview"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('bulkModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveBulk()">إضافة الكل</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLLECTION MODAL -->
+<div class="modal-backdrop" id="collModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="collModalTitle">إضافة مجموعة</div>
+    <p class="field-label req">اسم المجموعة</p>
+    <input type="text" class="fi" id="collName" placeholder="مثال: أدعية الطواف">
+    <p class="field-label">الأيقونة</p>
+    <div id="emojiPicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('collModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveCollection()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'omrah_duas_v2';
+const EMOJIS = ['🕌','🤲','📿','🌙','⭐','🕋','🌿','💚','✨','🫶','🌺','🕊'];
+let selectedEmoji = '🕌';
+let editingCollId = null;
+let editingDuaId = null;
+let currentCollId = null;
+let reader = {};
+let manageMode = false;
+
+function load() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return {
+    nextCollId: 3,
+    collections: [
+      { id: 1, name: 'أدعية الطواف', emoji: '🕋', duas: [
+        { id: 1, text: 'بِسْمِ اللَّهِ وَاللَّهُ أَكْبَرُ، اللَّهُمَّ إِيمَانًا بِكَ وَتَصْدِيقًا بِكِتَابِكَ وَوَفَاءً بِعَهْدِكَ وَاتِّبَاعًا لِسُنَّةِ نَبِيِّكَ ﷺ', source: 'دعاء بداية الطواف', repeat: 1 },
+        { id: 2, text: 'سُبْحَانَ اللهِ وَالْحَمْدُ للهِ وَلَا إِلَهَ إِلَّا اللهُ وَاللهُ أَكْبَرُ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ', source: 'ذكر في أثناء الطواف', repeat: 3 },
+        { id: 3, text: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ', source: 'سورة البقرة - الآية ٢٠١', repeat: 1 },
+        { id: 4, text: 'اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ', source: 'آية الكرسي - سورة البقرة', repeat: 1 }
+      ]},
+      { id: 2, name: 'أدعية السعي', emoji: '🌿', duas: [
+        { id: 1, text: 'إِنَّ الصَّفَا وَالْمَرْوَةَ مِن شَعَائِرِ اللَّهِ', source: 'سورة البقرة - الآية ١٥٨', repeat: 1 },
+        { id: 2, text: 'اللَّهُ أَكْبَرُ اللَّهُ أَكْبَرُ اللَّهُ أَكْبَرُ وَلِلَّهِ الْحَمْدُ', source: 'عند الصعود على الصفا', repeat: 3 },
+        { id: 3, text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ', source: 'دعاء الصفا والمروة', repeat: 3 }
+      ]}
+    ]
+  };
+}
+
+let db = load();
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+function getCol(id) { return db.collections.find(c => c.id === id); }
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function showHome() { manageMode = false; document.getElementById('manageBtn').classList.remove('active'); document.getElementById('manageBanner').classList.remove('show'); renderCollections(); showScreen('homeScreen'); }
+
+function toggleManage() {
+  manageMode = !manageMode;
+  document.getElementById('manageBtn').classList.toggle('active', manageMode);
+  document.getElementById('manageBanner').classList.toggle('show', manageMode);
+  renderCollections();
+}
+
+function renderCollections() {
+  const list = document.getElementById('collectionsList');
+  list.innerHTML = '';
+  if (!db.collections.length) { list.innerHTML = '<div style="text-align:center;color:#8e8e93;padding:30px;font-size:15px">لا توجد مجموعات.<br>أضف مجموعتك الأولى!</div>'; return; }
+  db.collections.forEach(col => {
+    const d = document.createElement('div');
+    d.className = 'collection-card';
+    d.innerHTML = '<div class="collection-card-inner">' +
+      '<div class="coll-icon">' + (col.emoji||'🕌') + '</div>' +
+      '<div class="coll-info"><div class="coll-name">' + col.name + '</div><div class="coll-count">' + col.duas.length + ' دعاء</div></div>' +
+      (manageMode
+        ? '<div class="manage-actions"><button class="icon-btn" onclick="showEdit(' + col.id + ')">✏️</button><button class="icon-btn red" onclick="deleteCol(' + col.id + ')">🗑</button></div>'
+        : '<button class="btn-start" onclick="startReader(' + col.id + ')">ابدأ</button>'
+      ) + '</div>';
+    list.appendChild(d);
+  });
+}
+
+function showAddCollection() {
+  editingCollId = null; selectedEmoji = '🕌';
+  document.getElementById('collModalTitle').textContent = 'إضافة مجموعة';
+  document.getElementById('collName').value = '';
+  renderEmojiPicker(); openModal('collModal');
+}
+function renderEmojiPicker() {
+  const p = document.getElementById('emojiPicker'); p.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const b = document.createElement('button');
+    b.textContent = e;
+    b.style.cssText = 'font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid ' + (e===selectedEmoji?'#2d6a2d':'transparent') + ';background:' + (e===selectedEmoji?'#e8f5e9':'#f2f2f7') + ';cursor:pointer;';
+    b.onclick = () => { selectedEmoji = e; renderEmojiPicker(); };
+    p.appendChild(b);
+  });
+}
+function saveCollection() {
+  const name = document.getElementById('collName').value.trim();
+  if (!name) { document.getElementById('collName').focus(); return; }
+  if (editingCollId) { const c = getCol(editingCollId); c.name = name; c.emoji = selectedEmoji; }
+  else db.collections.push({ id: db.nextCollId++, name, emoji: selectedEmoji, duas: [] });
+  save(); closeModal('collModal'); renderCollections();
+}
+function deleteCol(id) {
+  if (!confirm('حذف هذه المجموعة؟')) return;
+  db.collections = db.collections.filter(c => c.id !== id); save(); renderCollections();
+}
+
+function showEdit(collId) {
+  currentCollId = collId; editingDuaId = null;
+  document.getElementById('editTitle').textContent = getCol(collId).name;
+  renderDuas(); showScreen('editScreen');
+}
+function renderDuas() {
+  const col = getCol(currentCollId);
+  document.getElementById('editCountLabel').textContent = col.duas.length + ' دعاء في المجموعة';
+  const list = document.getElementById('duasList'); list.innerHTML = '';
+  if (!col.duas.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🤲</div>لا توجد أدعية بعد<br><small style="color:#c7c7cc">استخدم الأزرار أعلاه لإضافة أدعية</small></div>'; return; }
+  col.duas.forEach(dua => {
+    const d = document.createElement('div'); d.className = 'dua-card';
+    const rt = dua.repeat > 1 ? dua.repeat + ' مرات' : 'مرة واحدة';
+    d.innerHTML = '<div class="dua-row"><div class="dua-preview"><div class="dua-text-preview">' + dua.text + '</div><div class="dua-meta">' + (dua.source ? dua.source + '  ·  ' : '') + rt + '</div></div><div class="dua-actions"><button class="icon-btn" onclick="openDuaModal(' + dua.id + ')">✏️</button><button class="icon-btn red" onclick="deleteDua(' + dua.id + ')">🗑</button></div></div>';
+    list.appendChild(d);
+  });
+}
+
+function openDuaModal(duaId) {
+  editingDuaId = duaId;
+  if (duaId) {
+    const dua = getCol(currentCollId).duas.find(d => d.id === duaId);
+    document.getElementById('duaModalTitle').textContent = 'تعديل الدعاء';
+    document.getElementById('duaText').value = dua.text;
+    document.getElementById('duaSource').value = dua.source || '';
+    document.getElementById('duaRepeat').value = dua.repeat;
+  } else {
+    document.getElementById('duaModalTitle').textContent = 'إضافة دعاء';
+    document.getElementById('duaText').value = '';
+    document.getElementById('duaSource').value = '';
+    document.getElementById('duaRepeat').value = '1';
+  }
+  openModal('duaModal');
+}
+function saveDua() {
+  const text = document.getElementById('duaText').value.trim();
+  if (!text) { document.getElementById('duaText').focus(); return; }
+  const source = document.getElementById('duaSource').value.trim();
+  const repeat = Math.max(1, parseInt(document.getElementById('duaRepeat').value) || 1);
+  const col = getCol(currentCollId);
+  if (editingDuaId) { const dua = col.duas.find(d => d.id === editingDuaId); dua.text = text; dua.source = source; dua.repeat = repeat; }
+  else { const nid = col.duas.length ? Math.max(...col.duas.map(d => d.id)) + 1 : 1; col.duas.push({ id: nid, text, source, repeat }); }
+  save(); closeModal('duaModal'); renderDuas();
+}
+function deleteDua(duaId) {
+  if (!confirm('حذف هذا الدعاء؟')) return;
+  const col = getCol(currentCollId); col.duas = col.duas.filter(d => d.id !== duaId); save(); renderDuas();
+}
+
+function openBulkModal() {
+  document.getElementById('bulkText').value = '';
+  document.getElementById('bulkPreview').textContent = '';
+  openModal('bulkModal');
+}
+document.getElementById('bulkText').addEventListener('input', function() {
+  const parsed = parseBulk(this.value);
+  document.getElementById('bulkPreview').textContent = parsed.length ? 'سيتم إضافة ' + parsed.length + ' دعاء' : '';
+});
+function parseBulk(raw) {
+  const blocks = raw.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  const result = [];
+  blocks.forEach(block => {
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    let text = '', source = '', repeat = 1;
+    const mi = lines.findIndex(l => /^(المصدر|تكرار)\s*[::]/.test(l));
+    if (mi === -1) { text = lines.join('\n'); }
+    else {
+      text = lines.slice(0, mi).join('\n');
+      const ml = lines[mi];
+      const sm = ml.match(/المصدر\s*[:：]\s*([^|｜]+)/);
+      const rm = ml.match(/تكرار\s*[:：]\s*(\d+)/);
+      if (sm) source = sm[1].trim();
+      if (rm) repeat = parseInt(rm[1]);
+    }
+    if (text.trim()) result.push({ text: text.trim(), source, repeat });
+  });
+  return result;
+}
+function saveBulk() {
+  const parsed = parseBulk(document.getElementById('bulkText').value);
+  if (!parsed.length) { alert('لم يتم التعرف على أي دعاء. تأكد من الفصل بسطر فارغ.'); return; }
+  const col = getCol(currentCollId);
+  let nid = col.duas.length ? Math.max(...col.duas.map(d => d.id)) + 1 : 1;
+  parsed.forEach(p => col.duas.push({ id: nid++, ...p }));
+  save(); closeModal('bulkModal'); renderDuas();
+}
+
+function exportCollection() {
+  const col = getCol(currentCollId);
+  let lines = ['# ' + (col.emoji||'') + ' ' + col.name + '\n'];
+  col.duas.forEach(dua => {
+    lines.push(dua.text);
+    const meta = [];
+    if (dua.source) meta.push('المصدر: ' + dua.source);
+    if (dua.repeat > 1) meta.push('تكرار: ' + dua.repeat);
+    if (meta.length) lines.push(meta.join(' | '));
+    lines.push('');
+  });
+  const content = lines.join('\n');
+  if (navigator.share) { navigator.share({ title: col.name, text: content }).catch(() => copyText(content)); }
+  else copyText(content);
+}
+function copyText(text) {
+  if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => alert('تم نسخ المجموعة! يمكنك لصقها في واتساب أو أي تطبيق آخر.')); }
+  else { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('تم النسخ!'); }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(el => { el.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); }); });
+
+function startReader(collId) {
+  const col = getCol(collId);
+  if (!col.duas.length) { alert('هذه المجموعة فارغة.'); return; }
+  reader = { collId, idx: 0, count: 1 };
+  document.getElementById('readerCollName').textContent = col.name;
+  document.getElementById('doneView').style.display = 'none';
+  document.getElementById('readingView').style.display = 'flex';
+  showScreen('readerScreen'); renderReader();
+}
+function renderReader() {
+  const col = getCol(reader.collId);
+  const dua = col.duas[reader.idx];
+  const total = col.duas.length;
+  const repeat = dua.repeat || 1;
+  const count = reader.count;
+  const pct = ((reader.idx + count / repeat) / total) * 100;
+  document.getElementById('progressFill').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('progressNums').textContent = (reader.idx + 1) + ' / ' + total;
+  document.getElementById('readerBasmala').textContent = (dua.text.startsWith('قُلْ') || dua.text.startsWith('بِسْمِ اللَّهِ الرَّحْمَنِ')) ? 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ' : '';
+  document.getElementById('readerArabic').textContent = dua.text;
+  document.getElementById('readerSource').textContent = dua.source || '';
+  const cw = document.getElementById('circleWrap');
+  if (repeat > 1) {
+    cw.style.display = 'block';
+    document.getElementById('circleNum').textContent = count;
+    document.getElementById('circleArc').style.strokeDashoffset = 150.8 - (150.8 * count / repeat);
+    document.getElementById('repeatInfo').textContent = 'تكرار ' + repeat + ' مرات';
+  } else { cw.style.display = 'none'; document.getElementById('repeatInfo').textContent = 'مرة واحدة'; }
+  const isLast = reader.idx === total - 1;
+  const isLastCount = count >= repeat;
+  document.getElementById('actionBtn').textContent = (repeat > 1 && !isLastCount) ? 'قراءة' : (isLast ? 'إنهاء ✓' : 'التالي ←');
+}
+function handleAction() {
+  const col = getCol(reader.collId);
+  const dua = col.duas[reader.idx];
+  const repeat = dua.repeat || 1;
+  const isLast = reader.idx === col.duas.length - 1;
+  if (reader.count < repeat) { reader.count++; renderReader(); return; }
+  reader.count = 1;
+  if (!isLast) { reader.idx++; renderReader(); }
+  else { document.getElementById('progressFill').style.width = '100%'; document.getElementById('readingView').style.display = 'none'; document.getElementById('doneView').style.display = 'flex'; }
+}
+
+showHome();
+</script>
+</body>
+</html>
